@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    <meta
+      name="description"
+      content="相談支援事業所の独立採算に必要な売上・計画相談件数・時間を逆算するシミュレーター"
+    />
+    <title>相談支援事業所 独立採算シミュレーター</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <noscript>
+      <div class="global-error noscript-message" role="alert">このツールの計算にはJavaScriptが必要です。ブラウザーのJavaScriptを有効にして、ページを再読み込みしてください。</div>
+    </noscript>
+    <header class="hero">
+      <div class="hero__inner">
+        <p class="eyebrow">相談支援事業所の経営を、数字で見通す</p>
+        <h1>独立採算シミュレーター</h1>
+        <p class="hero__lead">
+          人件費や平均単価を入力すると、独立採算に必要な売上・件数と、
+          1件あたりに充てられる時間を自動で逆算します。
+        </p>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel input-panel" aria-labelledby="input-title">
+        <div class="section-heading">
+          <span class="step">STEP 1</span>
+          <div>
+            <h2 id="input-title">前提となる数字を入力</h2>
+            <p>数字を変えると、右側の結果がすぐに更新されます。</p>
+          </div>
+        </div>
+
+        <form id="simulator-form" novalidate>
+          <div class="field-grid">
+            <section class="input-theme input-theme--personnel" aria-labelledby="personnel-theme-title">
+              <h3 class="theme-heading" id="personnel-theme-title">人数と人件費</h3>
+            <label class="field">
+              <span class="field__label">相談支援専門員の常勤換算人数</span>
+              <span class="field__control">
+                <input id="staffCount" name="staffCount" type="number" min="0.1" step="0.1" value="2" inputmode="decimal" />
+                <span class="unit">人</span>
+              </span>
+              <span class="field__hint">常勤1人＋半日勤務1人なら「1.5人」など</span>
+              <span class="field__error" data-error-for="staffCount"></span>
+            </label>
+
+            <fieldset class="field field--wide mode-field">
+              <legend class="field__label">人件費の入力方法</legend>
+              <div class="mode-switch" role="radiogroup" aria-label="人件費の入力方法">
+                <label><input type="radio" name="costMode" value="total" checked /><span>相談支援事業所全体の総額を入力</span></label>
+                <label><input type="radio" name="costMode" value="perFte" /><span>常勤換算1.0人あたりから計算</span></label>
+              </div>
+              <span class="field__hint mode-explanation" id="cost-mode-explanation">
+                右側を選ぶと「常勤換算1.0人あたりの年間人件費」を入力できます。その金額に常勤換算人数を掛け、年間総人件費を自動計算します。例：500万円 × 1.5人 ＝ 750万円。
+              </span>
+            </fieldset>
+
+            <label class="field personnel-cost-field" id="total-cost-field">
+              <span class="field__label">年間総人件費</span>
+              <span class="field__control">
+                <input id="totalPersonnelCost" name="totalPersonnelCost" type="number" min="1" step="10000" value="10000000" inputmode="numeric" />
+                <span class="unit">円</span>
+              </span>
+              <span class="field__hint">専門員全員分の額面年収の合計（希望額でも可）</span>
+              <span class="field__error" data-error-for="totalPersonnelCost"></span>
+            </label>
+
+            <label class="field personnel-cost-field" id="per-fte-cost-field" hidden>
+              <span class="field__label">常勤換算1.0人あたり年間人件費</span>
+              <span class="field__control">
+                <input id="personnelCostPerFte" name="personnelCostPerFte" type="number" min="1" step="10000" value="5000000" inputmode="numeric" />
+                <span class="unit">円</span>
+              </span>
+              <span class="field__hint">額面年収の基準額（希望額でも可）。常勤換算人数を掛けて総額を出します</span>
+              <span class="field__error" data-error-for="personnelCostPerFte"></span>
+            </label>
+            </section>
+
+            <label class="field input-theme input-theme--single">
+              <span class="field__label">支出に占める人件費の割合</span>
+              <span class="field__control">
+                <input id="personnelCostRatio" name="personnelCostRatio" type="number" min="0.1" max="100" step="0.1" value="70" inputmode="decimal" />
+                <span class="unit">%</span>
+              </span>
+              <span class="field__hint">事業所の支出のうち、人件費が占める割合</span>
+              <span class="field__error" data-error-for="personnelCostRatio"></span>
+            </label>
+
+            <label class="field input-theme input-theme--single">
+              <span class="field__label">年間の委託費・その他収入</span>
+              <span class="field__control">
+                <input id="otherIncome" name="otherIncome" type="number" min="0" step="10000" value="3000000" inputmode="numeric" />
+                <span class="unit">円</span>
+              </span>
+              <span class="field__hint">この相談支援事業所における、計画相談以外の年間収入を入力します。法人全体や他事業の収入は含めません</span>
+              <span class="field__error" data-error-for="otherIncome"></span>
+            </label>
+
+            <label class="field input-theme input-theme--single">
+              <span class="field__label">計画相談の平均単価</span>
+              <span class="field__control">
+                <input id="averageUnitPrice" name="averageUnitPrice" type="number" min="1" step="100" value="18000" inputmode="numeric" />
+                <span class="unit">円／件</span>
+              </span>
+              <span class="field__hint">目安：直近1年間の計画相談収入 ÷ 同期間の請求件数（プラン作成・モニタリング等の合計）。1年分がない場合は、直近3～6か月など同じ期間の収入と件数で計算します</span>
+              <span class="field__error" data-error-for="averageUnitPrice"></span>
+            </label>
+
+            <label class="field input-theme input-theme--single">
+              <span class="field__label">常勤1.0人の年間労働時間</span>
+              <span class="field__control">
+                <input id="annualWorkHours" name="annualWorkHours" type="number" min="1" step="1" value="1920" inputmode="numeric" />
+                <span class="unit">時間</span>
+              </span>
+              <span class="field__hint">常勤職員1.0人が1年間に勤務する時間を入力します。例：月160時間 × 12か月 ＝ 1,920時間。複数人分を合計する必要はありません</span>
+              <span class="field__error" data-error-for="annualWorkHours"></span>
+            </label>
+
+            <label class="field field--wide input-theme input-theme--single">
+              <span class="field__label">計画相談業務に使える時間割合</span>
+              <span class="field__control">
+                <input id="consultationTimeRatio" name="consultationTimeRatio" type="number" min="0.1" max="100" step="0.1" value="60" inputmode="decimal" />
+                <span class="unit">%</span>
+              </span>
+              <span class="field__hint">年間労働時間のうち、計画作成・モニタリング・訪問・面談・それらに伴う記録など、計画相談業務に使える割合</span>
+              <span class="field__error" data-error-for="consultationTimeRatio"></span>
+            </label>
+          </div>
+          <button class="reset-button" id="reset-button" type="button">入力例に戻す</button>
+        </form>
+      </section>
+
+      <section class="panel results-panel" aria-labelledby="results-title">
+        <div class="section-heading">
+          <span class="step step--accent">STEP 2</span>
+          <div>
+            <h2 id="results-title">シミュレーション結果</h2>
+            <p id="result-status" aria-live="polite" aria-atomic="true">現在の入力条件から計算しています。</p>
+          </div>
+        </div>
+
+        <div id="global-error" class="global-error" role="alert" hidden></div>
+
+        <div id="results-content">
+          <div class="result-group">
+            <h3 class="primary-result-title">まず確認：必要な計画相談件数</h3>
+            <div class="result-cards result-cards--primary">
+              <article>
+                <span>事業所全体・年間</span>
+                <strong id="annualCases">—</strong>
+                <small id="annualCasesExact"></small>
+              </article>
+              <article>
+                <span>事業所全体・月間</span>
+                <strong id="monthlyCases">—</strong>
+                <small id="monthlyCasesExact"></small>
+              </article>
+              <article>
+                <span>常勤換算1.0人あたり・年間</span>
+                <strong id="annualCasesPerStaff">—</strong>
+                <small id="annualCasesPerStaffExact"></small>
+              </article>
+              <article>
+                <span>常勤換算1.0人あたり・月間</span>
+                <strong id="monthlyCasesPerStaff">—</strong>
+                <small id="monthlyCasesPerStaffExact"></small>
+              </article>
+            </div>
+          </div>
+
+          <p class="rounding-note">件数の大きな数字は、売上目標を下回らないよう切り上げて表示しています。</p>
+          <p id="fte-note" class="fte-note"></p>
+
+          <div class="hero-result hero-result--time">
+            <p>次に確認：1件あたりに充てられる時間</p>
+            <strong id="timePerCasePrimary">—</strong>
+            <span id="timePerCaseSecondary">—</span>
+          </div>
+
+          <div class="result-group">
+            <h3>必要な売上</h3>
+            <dl class="result-list">
+              <div>
+                <dt>計算に使った年間総人件費</dt>
+                <dd id="calculatedPersonnelCost">—</dd>
+              </div>
+              <div>
+                <dt>必要年間売上</dt>
+                <dd id="requiredAnnualRevenue">—</dd>
+              </div>
+              <div>
+                <dt>計画相談で必要な売上</dt>
+                <dd id="requiredConsultationRevenue">—</dd>
+              </div>
+            </dl>
+          </div>
+          <p id="surplus-message" class="surplus-message" hidden></p>
+        </div>
+      </section>
+
+      <details class="panel explanation-panel">
+        <summary>
+          <span>
+            <span class="step">確認</span>
+            計算式と前提を見る
+          </span>
+          <span class="summary-icon" aria-hidden="true">＋</span>
+        </summary>
+        <div class="explanation-content">
+          <p>
+            この試算は、年間総人件費を目標の人件費率に収めるために必要な売上を出し、
+            委託費などを差し引いた残りを計画相談で得る、という考え方です。
+          </p>
+          <ol>
+            <li><strong>必要年間売上</strong> ＝ 年間総人件費 ÷（支出に占める人件費の割合 ÷ 100）</li>
+            <li><strong>計画相談で必要な売上</strong> ＝ 必要年間売上 − 委託費・その他収入</li>
+            <li><strong>年間必要件数</strong> ＝ 計画相談で必要な売上 ÷ 平均単価</li>
+            <li><strong>常勤換算1.0人あたり年間必要件数</strong> ＝ 年間必要件数 ÷ 常勤換算人数</li>
+            <li><strong>月間件数</strong> ＝ それぞれの年間件数 ÷ 12</li>
+            <li><strong>計画相談に使える年間総時間</strong> ＝ 人数 × 年間労働時間 ×（時間割合 ÷ 100）</li>
+            <li><strong>1件あたりに充てられる時間</strong> ＝ 年間総時間 ÷ 切り上げ後の年間必要件数</li>
+          </ol>
+          <div class="notice">
+            <strong>Version 1.0.0の前提</strong>
+            <p>
+              必要年間売上は、収入と支出が同額になる「収支差0」を基準にした試算です。
+              平均単価は手入力です。実際の収支判断では、社会保険料などを含む法人負担の人件費、
+              取得できる加算、稼働日数なども確認してください。この結果は経営判断を補助する概算です。
+            </p>
+          </div>
+        </div>
+      </details>
+
+      <section class="panel public-info-panel" id="public-info" aria-labelledby="public-info-title">
+        <div class="public-info-heading">
+          <span class="step">ご利用にあたって</span>
+          <div>
+            <h2 id="public-info-title">安心してお使いいただくために</h2>
+            <p>本ツールの目的と、利用前に確認していただきたいことです。</p>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <article id="about">
+            <h3>このツールについて</h3>
+            <p>
+              相談支援事業所の独立採算を検討する際に、入力した条件から必要売上、
+              必要な計画相談件数、1件あたりに充てられる時間を概算する無料の参考ツールです。
+            </p>
+            <p>
+              必要年間売上は、収入と支出が同額になる「収支差0」を基準にしています。
+              計算結果は、事業所ごとの経営状況を保証したり、特定の経営判断を勧めたりするものではありません。
+            </p>
+          </article>
+
+          <article id="privacy">
+            <h3>入力した情報について</h3>
+            <p>
+              入力した人数・人件費・収入などの数値は、お使いの端末のブラウザー内だけで計算されます。
+              本ツールには、入力値を保存したり、社会福祉法人とよさとへ送信したりする機能はありません。
+            </p>
+            <p>
+              氏名、住所、利用者情報などの個人情報は入力しないでください。
+              なお、サイトの公開サービスでは、安全な運営のためアクセス日時やIPアドレス等の通信記録が扱われる場合があります。
+            </p>
+          </article>
+
+          <article id="terms" class="info-card--wide">
+            <h3>利用上の注意</h3>
+            <ul>
+              <li>結果は、入力された条件と画面に記載した計算式に基づく概算です。</li>
+              <li>計画相談の報酬単価、加算、制度、税務、会計上の取扱いなどは、最新の公的情報をご確認ください。</li>
+              <li>重要な経営判断を行う場合は、税理士、社会保険労務士などの専門家にもご相談ください。</li>
+              <li>公開後の制度変更などにより、説明や初期値が最新の状況と一致しない場合があります。</li>
+              <li>利用者ご自身で入力条件と計算結果をご確認のうえ、判断材料の一つとしてご利用ください。</li>
+            </ul>
+            <p class="liability-note">
+              社会福祉法人とよさとは、本ツールの正確性・完全性・特定目的への適合性を保証するものではありません。
+              本ツールの利用または利用できなかったことにより生じた損害について、法令上認められる範囲で責任を負わないものとします。
+            </p>
+          </article>
+        </div>
+
+        <div class="operator-info" id="operator">
+          <dl>
+            <div><dt>企画・提供</dt><dd data-config="provider">社会福祉法人とよさと</dd></div>
+            <div><dt>版</dt><dd data-config="version">Version 1.0.0</dd></div>
+            <div><dt>最終更新日</dt><dd data-config="lastUpdated">2026年8月18日</dd></div>
+          </dl>
+          <p>内容の誤りや不具合にお気づきの場合は、社会福祉法人とよさとまでお知らせください。</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p><span data-config="appName">相談支援事業所 独立採算シミュレーター</span>・<span data-config="version">Version 1.0.0</span></p>
+      <p class="copyright" data-config="copyright">© 社会福祉法人とよさと</p>
+      <nav class="footer-links" aria-label="サイト情報">
+        <a href="#about">このツールについて</a>
+        <a href="#terms">利用上の注意</a>
+        <a href="#privacy">入力情報について</a>
+        <a href="#operator">運営者情報</a>
+      </nav>
+    </footer>
+  </body>
+</html>
