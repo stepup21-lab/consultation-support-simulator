@@ -2,8 +2,8 @@
 
 const SYSTEM_CONFIG = Object.freeze({
   appName: "相談支援事業所 独立採算シミュレーター",
-  version: "Version 1.0.0",
-  lastUpdated: "2026年8月18日",
+  version: "Version 1.1.0",
+  lastUpdated: "2026年11月19日",
   copyright: "© 社会福祉法人とよさと",
   provider: "社会福祉法人とよさと",
 });
@@ -14,6 +14,7 @@ const DEFAULT_VALUES = Object.freeze({
   personnelCostPerFte: 5000000,
   personnelCostRatio: 70,
   otherIncome: 3000000,
+  targetAnnualSurplus: 0,
   averageUnitPrice: 18000,
   annualWorkHours: 1920,
   consultationTimeRatio: 60,
@@ -25,6 +26,7 @@ const FIELD_RULES = Object.freeze({
   personnelCostPerFte: { label: "常勤換算1.0人あたり年間人件費", minExclusive: 0 },
   personnelCostRatio: { label: "支出に占める人件費の割合", minExclusive: 0, max: 100 },
   otherIncome: { label: "委託費・その他収入", min: 0 },
+  targetAnnualSurplus: { label: "目標とする年間黒字額", min: 0 },
   averageUnitPrice: { label: "計画相談の平均単価", minExclusive: 0 },
   annualWorkHours: { label: "年間労働時間", minExclusive: 0 },
   consultationTimeRatio: { label: "計画相談業務の時間割合", minExclusive: 0, max: 100 },
@@ -105,7 +107,8 @@ function calculateScenario(values) {
   const calculatedPersonnelCost = values.costMode === "perFte"
     ? values.personnelCostPerFte * values.staffCount
     : values.totalPersonnelCost;
-  const requiredAnnualRevenue = calculatedPersonnelCost / personnelCostRatio;
+  const breakEvenAnnualRevenue = calculatedPersonnelCost / personnelCostRatio;
+  const requiredAnnualRevenue = breakEvenAnnualRevenue + values.targetAnnualSurplus;
   const requiredConsultationRevenue = Math.max(requiredAnnualRevenue - values.otherIncome, 0);
 
   // 2. 必要件数の計算（平均単価は外部で確定済みの値として受け取る）
@@ -125,6 +128,7 @@ function calculateScenario(values) {
 
   return {
     calculatedPersonnelCost,
+    breakEvenAnnualRevenue,
     requiredAnnualRevenue,
     requiredConsultationRevenue,
     annualCasesExact,
@@ -175,6 +179,8 @@ function renderErrors(errors) {
 
 function renderResults(result, values) {
   setText("calculatedPersonnelCost", yenFormatter.format(Math.ceil(result.calculatedPersonnelCost)));
+  setText("breakEvenAnnualRevenue", yenFormatter.format(Math.ceil(result.breakEvenAnnualRevenue)));
+  setText("targetAnnualSurplusResult", yenFormatter.format(Math.ceil(values.targetAnnualSurplus)));
   setText("requiredAnnualRevenue", yenFormatter.format(Math.ceil(result.requiredAnnualRevenue)));
   setText("requiredConsultationRevenue", yenFormatter.format(Math.ceil(result.requiredConsultationRevenue)));
   setText("annualCases", formatCases(result.annualCasesExact));
