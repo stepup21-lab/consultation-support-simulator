@@ -105,6 +105,16 @@
             </label>
 
             <label class="field input-theme input-theme--single">
+              <span class="field__label">目標とする年間黒字額</span>
+              <span class="field__control">
+                <input id="targetAnnualSurplus" name="targetAnnualSurplus" type="number" min="0" step="10000" value="0" inputmode="numeric" />
+                <span class="unit">円</span>
+              </span>
+              <span class="field__hint">収支差0を目指す場合は「0円」。例：年間100万円の黒字を目指す場合は「1,000,000円」</span>
+              <span class="field__error" data-error-for="targetAnnualSurplus"></span>
+            </label>
+
+            <label class="field input-theme input-theme--single">
               <span class="field__label">計画相談の平均単価</span>
               <span class="field__control">
                 <input id="averageUnitPrice" name="averageUnitPrice" type="number" min="1" step="100" value="18000" inputmode="numeric" />
@@ -193,7 +203,15 @@
                 <dd id="calculatedPersonnelCost">—</dd>
               </div>
               <div>
-                <dt>必要年間売上</dt>
+                <dt>収支差0に必要な年間売上</dt>
+                <dd id="breakEvenAnnualRevenue">—</dd>
+              </div>
+              <div>
+                <dt>目標とする年間黒字額</dt>
+                <dd id="targetAnnualSurplusResult">—</dd>
+              </div>
+              <div>
+                <dt>黒字目標を含む必要年間売上</dt>
                 <dd id="requiredAnnualRevenue">—</dd>
               </div>
               <div>
@@ -217,11 +235,12 @@
         <div class="explanation-content">
           <p>
             この試算は、年間総人件費を目標の人件費率に収めるために必要な売上を出し、
-            委託費などを差し引いた残りを計画相談で得る、という考え方です。
+            目標とする年間黒字額を上乗せしたうえで、委託費などを差し引いた残りを計画相談で得る、という考え方です。
           </p>
           <ol>
-            <li><strong>必要年間売上</strong> ＝ 年間総人件費 ÷（支出に占める人件費の割合 ÷ 100）</li>
-            <li><strong>計画相談で必要な売上</strong> ＝ 必要年間売上 − 委託費・その他収入</li>
+            <li><strong>収支差0に必要な年間売上</strong> ＝ 年間総人件費 ÷（支出に占める人件費の割合 ÷ 100）</li>
+            <li><strong>黒字目標を含む必要年間売上</strong> ＝ 収支差0に必要な年間売上 ＋ 目標とする年間黒字額</li>
+            <li><strong>計画相談で必要な売上</strong> ＝ 黒字目標を含む必要年間売上 − 委託費・その他収入</li>
             <li><strong>年間必要件数</strong> ＝ 計画相談で必要な売上 ÷ 平均単価</li>
             <li><strong>常勤換算1.0人あたり年間必要件数</strong> ＝ 年間必要件数 ÷ 常勤換算人数</li>
             <li><strong>月間件数</strong> ＝ それぞれの年間件数 ÷ 12</li>
@@ -229,9 +248,10 @@
             <li><strong>1件あたりに充てられる時間</strong> ＝ 年間総時間 ÷ 切り上げ後の年間必要件数</li>
           </ol>
           <div class="notice">
-            <strong>Version 1.0.0の前提</strong>
+            <strong>Version 1.1.0の前提</strong>
             <p>
-              必要年間売上は、収入と支出が同額になる「収支差0」を基準にした試算です。
+              収入と支出が同額になる「収支差0」を基準とし、入力した年間黒字額を上乗せして試算します。
+              黒字額を0円にすると、収支差0を目標にした計算になります。
               平均単価は手入力です。実際の収支判断では、社会保険料などを含む法人負担の人件費、
               取得できる加算、稼働日数なども確認してください。この結果は経営判断を補助する概算です。
             </p>
@@ -256,7 +276,7 @@
               必要な計画相談件数、1件あたりに充てられる時間を概算する無料の参考ツールです。
             </p>
             <p>
-              必要年間売上は、収入と支出が同額になる「収支差0」を基準にしています。
+              収入と支出が同額になる「収支差0」を基準とし、入力した年間黒字額を上乗せして必要年間売上を計算します。
               計算結果は、事業所ごとの経営状況を保証したり、特定の経営判断を勧めたりするものではありません。
             </p>
           </article>
@@ -268,7 +288,7 @@
               本ツールには、入力値を保存したり、社会福祉法人とよさとへ送信したりする機能はありません。
             </p>
             <p>
-              氏名、住所、利用者情報などの個人情報は入力しないでください。
+              相談支援を受ける方の氏名、住所などの個人情報は入力しないでください。
               なお、サイトの公開サービスでは、安全な運営のためアクセス日時やIPアドレス等の通信記録が扱われる場合があります。
             </p>
           </article>
@@ -280,7 +300,7 @@
               <li>計画相談の報酬単価、加算、制度、税務、会計上の取扱いなどは、最新の公的情報をご確認ください。</li>
               <li>重要な経営判断を行う場合は、税理士、社会保険労務士などの専門家にもご相談ください。</li>
               <li>公開後の制度変更などにより、説明や初期値が最新の状況と一致しない場合があります。</li>
-              <li>利用者ご自身で入力条件と計算結果をご確認のうえ、判断材料の一つとしてご利用ください。</li>
+              <li>本ツールをお使いになる方が入力条件と計算結果をご確認のうえ、判断材料の一つとしてご活用ください。</li>
             </ul>
             <p class="liability-note">
               社会福祉法人とよさとは、本ツールの正確性・完全性・特定目的への適合性を保証するものではありません。
@@ -292,8 +312,8 @@
         <div class="operator-info" id="operator">
           <dl>
             <div><dt>企画・提供</dt><dd data-config="provider">社会福祉法人とよさと</dd></div>
-            <div><dt>版</dt><dd data-config="version">Version 1.0.0</dd></div>
-            <div><dt>最終更新日</dt><dd data-config="lastUpdated">2026年8月18日</dd></div>
+            <div><dt>版</dt><dd data-config="version">Version 1.1.0</dd></div>
+            <div><dt>最終更新日</dt><dd data-config="lastUpdated">2026年11月19日</dd></div>
           </dl>
           <p>内容の誤りや不具合にお気づきの場合は、社会福祉法人とよさとまでお知らせください。</p>
         </div>
@@ -301,7 +321,7 @@
     </main>
 
     <footer>
-      <p><span data-config="appName">相談支援事業所 独立採算シミュレーター</span>・<span data-config="version">Version 1.0.0</span></p>
+      <p><span data-config="appName">相談支援事業所 独立採算シミュレーター</span>・<span data-config="version">Version 1.1.0</span></p>
       <p class="copyright" data-config="copyright">© 社会福祉法人とよさと</p>
       <nav class="footer-links" aria-label="サイト情報">
         <a href="#about">このツールについて</a>
